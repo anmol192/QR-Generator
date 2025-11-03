@@ -11,7 +11,7 @@ Include any Loom video links that demonstrate the changes running locally.
 Example: https://www.loom.com/share/xxxxxxx 
 -->
 
-- [ ] Loom video recorded and attached demonstrating local functionality
+- [ ] Loom video recorded and attached demonstrating local functionality(Link in Comment)
 - [ ] All Copilot-suggested comments are resolved
 - [ ] No console errors or warnings in local environment
 - [ ] All acceptance criteria defined in the related task or issue are met
