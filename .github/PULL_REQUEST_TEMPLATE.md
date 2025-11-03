@@ -1,7 +1,8 @@
 ## Summary
 Brief description of the change.
 
-## Checklist (please check)
+## Checklist (please check) 
+
 - [ ] I added/updated tests
 - [ ] I updated the documentation
 - [ ] I ran the linter and fixed issues
