@@ -1,0 +1,30 @@
+name: Validate Pull Request
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  validate-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR description for checklist completion
+        id: checklist
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prBody = context.payload.pull_request.body || "";
+            const unchecked = prBody.match(/- \[ \]/g) || [];
+            const hasLoom = /https?:\/\/(www\.)?loom\.com\/share\/[A-Za-z0-9]+/.test(prBody);
+
+            if (unchecked.length > 0) {
+              core.setFailed(`❌ Found ${unchecked.length} unchecked checkbox(es). Please complete all items in the checklist.`);
+            } else {
+              console.log("✅ All checkboxes are checked.");
+            }
+
+            if (!hasLoom) {
+              core.setFailed("❌ Loom video link not found in the PR description. Please attach a Loom video as part of acceptance criteria.");
+            } else {
+              console.log("✅ Loom video link detected.");
+            }
