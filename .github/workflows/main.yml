@@ -1,0 +1,48 @@
+name: Validate PR Documentation
+
+on:
+  pull_request:
+    branches:
+      - "*"              # ✅ Runs for all branches (no restrictions)
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+
+jobs:
+  validate-pr-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Debug — print PR body
+        run: |
+          echo "🔍 Printing PR body for debugging..."
+          jq -r '.pull_request.body' "$GITHUB_EVENT_PATH" || true
+
+      - name: Validate PR checkboxes
+        shell: bash
+        run: |
+          echo "🔍 Validating PR checkboxes..."
+          BODY=$(jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH")
+
+          echo "---- START BODY ----"
+          echo "$BODY"
+          echo "---- END BODY ----"
+
+          # Convert HTML entities to real text just in case
+          BODY=$(python3 -c "import html,sys; print(html.unescape(sys.argv[1]));" "$BODY")
+
+          # ✅ Logic:
+          # Pass if *any* one of Frontend, Backend, or Both checkboxes is checked ([x] or [X])
+          # Fail otherwise
+          if echo "$BODY" | grep -Eiq '(\-|\*)\s*\[\s*[xX]\s*\].*(Frontend|Backend|Both)'; then
+            echo "✅ Validation passed: At least one checkbox is checked (Frontend / Backend / Both)"
+            exit 0
+          else
+            echo "❌ Validation failed: No checkbox is checked. Please check at least one (Frontend / Backend / Both)"
+            exit 1
+          fi
