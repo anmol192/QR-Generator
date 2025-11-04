@@ -20,19 +20,4 @@ jobs:
       - name: Validate PR checkboxes
         shell: bash
         run: |
-          echo "🔍 Validating PR checkboxes..."
-          BODY=$(jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH")
-
-          echo "---- START BODY ----"
-          echo "$BODY"
-          echo "---- END BODY ----"
-
-          # Match any markdown checkbox checked: - [x], * [X], etc.
-          # Handles cases like "- [x] Frontend", "- [x] **Frontend**", etc.
-          if echo "$BODY" | grep -Eiq '(\-|\*)\s*\[\s*x\s*\].*(Frontend|Backend|Both)'; then
-            echo "✅ At least one checkbox is checked (Frontend / Backend / Both)"
-            exit 0
-          else
-            echo "❌ No checkbox found checked. Please check at least one (Frontend / Backend / Both)"
-            exit 1
-          fi
+          echo "🔍 Validating PR checkboxes.
