@@ -12,29 +12,27 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract and validate PR description checkboxes
+      - name: Debug — print PR body
         run: |
-          echo "Extracting PR body..."
+          echo "🔍 Printing PR body for debugging..."
+          jq -r '.pull_request.body' "$GITHUB_EVENT_PATH" || true
+
+      - name: Validate PR checkboxes
+        shell: bash
+        run: |
+          echo "🔍 Validating PR checkboxes..."
           BODY=$(jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH")
 
-          echo "---- PR Body ----"
+          echo "---- START BODY ----"
           echo "$BODY"
-          echo "-----------------"
+          echo "---- END BODY ----"
 
-          # Convert HTML entities to real characters just in case
-          BODY=$(python3 -c "import html,sys; print(html.unescape(sys.argv[1]));" "$BODY")
-
-          echo "Normalized body:"
-          echo "$BODY"
-
-          # Only pass if any one checkbox is actually checked ([x] or [X]) for Frontend / Backend / Both
-          if echo "$BODY" | grep -Eiq '\[[xX]\][[:space:]]*(Frontend|Backend|Both)'; then
-            echo "✅ Validation passed: Found a checked box for Frontend/Backend/Both."
-            exit 0
-          elif echo "$BODY" | grep -Eiq '(Frontend|Backend|Both)[[:space:]]*\[[xX]\]'; then
-            echo "✅ Validation passed: Found checked box (label before checkbox)."
+          # Match any markdown checkbox checked: - [x], * [X], etc.
+          # Handles cases like "- [x] Frontend", "- [x] **Frontend**", etc.
+          if echo "$BODY" | grep -Eiq '(\-|\*)\s*\[\s*x\s*\].*(Frontend|Backend|Both)'; then
+            echo "✅ At least one checkbox is checked (Frontend / Backend / Both)"
             exit 0
           else
-            echo "❌ Validation failed: No checked box found for Frontend, Backend, or Both."
+            echo "❌ No checkbox found checked. Please check at least one (Frontend / Backend / Both)"
             exit 1
           fi
