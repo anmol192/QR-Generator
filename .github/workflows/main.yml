@@ -1,4 +1,4 @@
-name: Validate PR Documentation
+name: Validate PR Documentation (robust)
 
 on:
   pull_request:
@@ -9,15 +9,43 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Debug — print PR body
+      - name: Show event path
         run: |
-          echo "🔍 Printing PR body for debugging..."
-          jq -r '.pull_request.body' "$GITHUB_EVENT_PATH" || true
+          echo "Event path: $GITHUB_EVENT_PATH"
+          echo "---- Event JSON head ----"
+          head -n 100 "$GITHUB_EVENT_PATH" || true
 
-      - name: Validate PR checkboxes
+      - name: Dump raw PR body (for debugging)
+        run: |
+          echo "---- RAW PR BODY ----"
+          jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH" || true
+          echo "---- END RAW PR BODY ----"
+
+      - name: Unescape HTML entities and save normalized body
+        run: |
+          # Use python's html.unescape to convert things like &#91; back to '['
+          python3 - <<'PY' > /tmp/pr_body_norm.txt
+import sys, json, html
+p = json.load(open(sys.argv[1]))
+body = p.get("pull_request", {}).get("body") or ""
+print(html.unescape(body))
+PY
+          /github/workspace/.github || true
+        shell: bash
+        env:
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+
+      - name: Show normalized PR body
+        run: |
+          echo "---- NORMALIZED PR BODY ----"
+          sed -n '1,200p' /tmp/pr_body_norm.txt || true
+          echo "---- END NORMALIZED PR BODY ----"
+
+      - name: Validate checked boxes for Frontend/Backend/Both
         shell: bash
         run: |
-          echo "🔍 Validating PR checkboxes.
+          set -euo pipefail
+          BODY_FILE=/tmp/pr_body_norm.txt
