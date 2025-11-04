@@ -10,6 +10,7 @@ generateBtn.addEventListener('click',(e)=>{
     isEmptyInput();
 });
 
+
 sizes.addEventListener('change',(e)=>{
     size = e.target.value;
     isEmptyInput();
@@ -46,3 +47,4 @@ function generateQRCode(){
         colorDark:"#000",
     });
 }
+
