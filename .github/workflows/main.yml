@@ -1,4 +1,4 @@
-name: Validate PR Documentation (robust)
+name: Validate PR Documentation
 
 on:
   pull_request:
@@ -9,43 +9,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Show event path
+      - name: Extract and validate PR description checkboxes
         run: |
-          echo "Event path: $GITHUB_EVENT_PATH"
-          echo "---- Event JSON head ----"
-          head -n 100 "$GITHUB_EVENT_PATH" || true
+          echo "Extracting PR body..."
+          BODY=$(jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH")
 
-      - name: Dump raw PR body (for debugging)
-        run: |
-          echo "---- RAW PR BODY ----"
-          jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH" || true
-          echo "---- END RAW PR BODY ----"
+          echo "---- PR Body ----"
+          echo "$BODY"
+          echo "-----------------"
 
-      - name: Unescape HTML entities and save normalized body
-        run: |
-          # Use python's html.unescape to convert things like &#91; back to '['
-          python3 - <<'PY' > /tmp/pr_body_norm.txt
-import sys, json, html
-p = json.load(open(sys.argv[1]))
-body = p.get("pull_request", {}).get("body") or ""
-print(html.unescape(body))
-PY
-          /github/workspace/.github || true
-        shell: bash
-        env:
-          GITHUB_EVENT_PATH: ${{ github.event_path }}
+          # Convert HTML entities to real characters just in case
+          BODY=$(python3 -c "import html,sys; print(html.unescape(sys.argv[1]));" "$BODY")
 
-      - name: Show normalized PR body
-        run: |
-          echo "---- NORMALIZED PR BODY ----"
-          sed -n '1,200p' /tmp/pr_body_norm.txt || true
-          echo "---- END NORMALIZED PR BODY ----"
+          echo "Normalized body:"
+          echo "$BODY"
 
-      - name: Validate checked boxes for Frontend/Backend/Both
-        shell: bash
-        run: |
-          set -euo pipefail
-          BODY_FILE=/tmp/pr_body_norm.txt
+          # Only pass if any one checkbox is actually checked ([x] or [X]) for Frontend / Backend / Both
+          if echo "$BODY" | grep -Eiq '\[[xX]\][[:space:]]*(Frontend|Backend|Both)'; then
+            echo "✅ Validation passed: Found a checked box for Frontend/Backend/Both."
+            exit 0
+          elif echo "$BODY" | grep -Eiq '(Frontend|Backend|Both)[[:space:]]*\[[xX]\]'; then
+            echo "✅ Validation passed: Found checked box (label before checkbox)."
+            exit 0
+          else
+            echo "❌ Validation failed: No checked box found for Frontend, Backend, or Both."
+            exit 1
+          fi
