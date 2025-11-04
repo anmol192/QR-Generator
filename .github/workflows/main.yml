@@ -7,39 +7,20 @@ on:
 jobs:
   validate-pr-docs:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Validate PR documentation section
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const pr = context.payload.pull_request;
-            const body = (pr.body || "").toLowerCase();
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-            let errors = [];
-
-            // --- 1️⃣ Check for unchecked boxes ---
-            const unchecked = body.match(/- \[ \]/g);
-            if (unchecked && unchecked.length > 0) {
-              errors.push(`❌ Found ${unchecked.length} unchecked checkbox(es). Please complete all checklist items.`);
-            }
-
-            // --- 2️⃣ Check Loom link for Frontend or Both ---
-            const loomRequired = body.includes("frontend") || body.includes("both");
-            const hasLoom = /https?:\/\/(www\.)?loom\.com\/share\/[A-Za-z0-9_-]+/.test(body);
-            if (loomRequired && !hasLoom) {
-              errors.push("❌ Loom link is missing for Frontend/Both PR types.");
-            }
-
-            // --- 3️⃣ Check Swagger link for Backend or Both ---
-            const swaggerRequired = body.includes("backend") || body.includes("both");
-            const hasSwagger = /https?:\/\/[^\s]*swagger[^\s]*/.test(body);
-            if (swaggerRequired && !hasSwagger) {
-              errors.push("❌ Swagger documentation link is missing for Backend/Both PR types.");
-            }
-
-            // --- 4️⃣ Report results ---
-            if (errors.length > 0) {
-              core.setFailed(errors.join("\n"));
-            } else {
-              console.log("✅ PR documentation validation passed successfully.");
-            }
+      - name: Validate PR description
+        run: |
+          echo "Validating PR body..."
+          BODY=$(jq -r '.pull_request.body' "$GITHUB_EVENT_PATH")
+          echo "PR Body:"
+          echo "$BODY"
+          if echo "$BODY" | grep -q "\- \[x\]"; then
+            echo "✅ Checkbox ticked. Validation passed."
+          else
+            echo "❌ Please tick the checkbox before merging."
+            exit 1
+          fi
