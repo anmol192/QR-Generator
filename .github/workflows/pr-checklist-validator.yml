@@ -1,0 +1,25 @@
+name: ✅ Validate PR Template Checklist
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  validate-checklist:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🕵️ Check if any checkbox is ticked
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prBody = context.payload.pull_request.body || "";
+            
+            // Regex to find checked boxes, e.g. "- [x]" or "- [X]"
+            const checked = prBody.match(/- \[[xX]\]/g);
+            
+            if (!checked) {
+              core.setFailed("❌ Please tick at least one checkbox in the PR template before merging.");
+            } else {
+              console.log("✅ PR checklist verified!");
+            }
