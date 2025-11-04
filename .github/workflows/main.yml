@@ -12,18 +12,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Validate PR Documentation Checkboxes
+      - name: Validate PR Checkboxes
+        shell: bash
         run: |
-          echo "🔍 Validating PR description..."
-          BODY=$(jq -r '.pull_request.body' "$GITHUB_EVENT_PATH")
-          echo "PR Body:"
+          echo "🔍 Validating PR checkboxes..."
+          BODY=$(jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH")
+          echo "---- PR BODY START ----"
           echo "$BODY"
-          echo "--------------------------"
+          echo "---- PR BODY END ----"
 
-          # Look for checked boxes [x] for Frontend, Backend, or Both
-          if echo "$BODY" | grep -qiE "(\*\*\s*\[\s*x\s*\]\s*Frontend|\*\*\s*\[\s*x\s*\]\s*Backend|\*\*\s*\[\s*x\s*\]\s*Both)"; then
-            echo "✅ At least one checkbox (Frontend/Backend/Both) is checked. Validation passed."
+          # Search for any of the 3 checked boxes
+          if echo "$BODY" | grep -qiE '\- \[\s*x\s*\]\s*(Frontend|Backend|Both)'; then
+            echo "✅ Validation passed: At least one checkbox is checked (Frontend / Backend / Both)."
+            exit 0
           else
-            echo "❌ Validation failed: Please check at least one PR type checkbox (Frontend, Backend, or Both) before merging."
+            echo "❌ Validation failed: Please check at least one box — Frontend, Backend, or Both."
             exit 1
           fi
