@@ -3,7 +3,7 @@
 Please select the relevant type and provide documentation links below:
 
 - [ ] **Frontend**
-  - Loom video link demonstrating UI changes: [Paste Loom link here]
+  - Loom video link demonstrating UI changes: [**Paste Loom link here]**
 
 - [ ] **Backend**
   - Swagger documentation link showing updated API endpoints: [Paste Swagger link here]
