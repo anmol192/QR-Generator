@@ -12,34 +12,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Debug: show event payload (for troubleshooting)
+      - name: Validate PR Documentation Checkboxes
         run: |
-          echo "---- GITHUB EVENT PATH ----"
-          echo "$GITHUB_EVENT_PATH"
-          echo "---- EVENT JSON (first 200 lines) ----"
-          head -n 200 "$GITHUB_EVENT_PATH" || true
-
-      - name: Validate PR Documentation Checkboxes & Links
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "🔍 Extracting PR body..."
-          BODY=$(jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH")
-          echo "---- PR BODY START ----"
+          echo "🔍 Validating PR description..."
+          BODY=$(jq -r '.pull_request.body' "$GITHUB_EVENT_PATH")
+          echo "PR Body:"
           echo "$BODY"
-          echo "---- PR BODY END ----"
+          echo "--------------------------"
 
-          # Normalize body to lower-case for keyword checks where needed
-          BODY_LOWER=$(printf "%s" "$BODY" | tr '[:upper:]' '[:lower:]')
-
-          # Check for checked boxes: we accept variants like "- [x] frontend" or "- [x] **Frontend**"
-          FRONTEND_CHECKED=false
-          BACKEND_CHECKED=false
-          BOTH_CHECKED=false
-
-          if printf "%s" "$BODY" | grep -qiE '\- \[\s*x\s*\]\s*\*{0,2}\s*frontend'; then
-            FRONTEND_CHECKED=true
-            echo "✅ Frontend checkbox checked"
+          # Look for checked boxes [x] for Frontend, Backend, or Both
+          if echo "$BODY" | grep -qiE "(\*\*\s*\[\s*x\s*\]\s*Frontend|\*\*\s*\[\s*x\s*\]\s*Backend|\*\*\s*\[\s*x\s*\]\s*Both)"; then
+            echo "✅ At least one checkbox (Frontend/Backend/Both) is checked. Validation passed."
+          else
+            echo "❌ Validation failed: Please check at least one PR type checkbox (Frontend, Backend, or Both) before merging."
+            exit 1
           fi
-
-          if printf "%s" "$BODY
