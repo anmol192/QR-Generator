@@ -1,11 +1,15 @@
 ## 📘 PR Documentation
 
-Please check the relevant box and provide the required documentation link(s).
+Please select the relevant type and provide documentation links below:
 
-| PR Type | Documentation Provided |
-| :--- | :--- |
-| **- [ ] Frontend** | **Loom:** [Paste link to your Loom video demonstrating UI changes] |
-| **- [ ] Backend** | **Swagger:** [Paste link to the updated Swagger documentation] |
-| **- [ ] Both** | **Loom:** [Paste Loom link] <br> **Swagger:** [Paste Swagger link] |
+- [ ] **Frontend**
+  - Loom video link demonstrating UI changes: [Paste Loom link here]
 
-> 💡 Tip: Please ensure the Loom and/or Swagger links are accessible and demonstrate the implemented changes clearly.
+- [ ] **Backend**
+  - Swagger documentation link showing updated API endpoints: [Paste Swagger link here]
+
+- [ ] **Both**
+  - Loom video link: [Paste Loom link here]
+  - Swagger documentation link: [Paste Swagger link here]
+
+> 💡 Tip: Please ensure Loom and Swagger links are accessible and clearly demonstrate implemented changes.
